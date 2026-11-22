@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     container_name: jobtracker-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:job_tracker}
-      POSTGRES_USER: ${POSTGRES_USER:postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-job_tracker}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d job_tracker"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-job_tracker}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -19,7 +19,7 @@ services:
     image: redis:7-alpine
     container_name: jobtracker-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     mem_limit: 256m
     command: redis-server --maxmemory 192mb --maxmemory-policy allkeys-lru
     healthcheck:
@@ -36,13 +36,14 @@ services:
 
   app:
     build: .
-    container_name: jobtracker-app
+    # No container_name: a fixed name prevents `docker compose up --scale app=N`
     ports:
-      - "8080:8080"
+      # Host port is overridable so replicas don't collide (see README)
+      - "${APP_PORT:-8080}:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:job_tracker}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:postgres}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-job_tracker}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       NOTIFICATION_SERVICE_URL: http://notification-service:8081
@@ -53,5 +54,14 @@ services:
           condition: service_healthy
         notification-service:
           condition: service_started
+
+networks:
+  # Pinned name: with `container_name` set on postgres/redis, an unnamed project
+  # network can be left pointing at a stale (removed) network during recreate,
+  # which leaves those containers detached and makes the app fail with
+  # `UnknownHostException: postgres`. A stable name makes `up` / `down` symmetric.
+  default:
+    name: jobtracker_default
+
 volumes:
   postgres_data:

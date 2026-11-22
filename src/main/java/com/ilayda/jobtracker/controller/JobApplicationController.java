@@ -3,7 +3,6 @@ package com.ilayda.jobtracker.controller;
 import com.ilayda.jobtracker.dto.JobApplicationRequest;
 import com.ilayda.jobtracker.dto.JobApplicationResponse;
 import com.ilayda.jobtracker.entity.ApplicationStatus;
-import com.ilayda.jobtracker.entity.JobApplication;
 import com.ilayda.jobtracker.service.JobApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -9,15 +9,13 @@ import com.ilayda.jobtracker.entity.Company;
 import com.ilayda.jobtracker.entity.JobApplication;
 import com.ilayda.jobtracker.repository.CompanyRepository;
 import com.ilayda.jobtracker.repository.JobApplicationRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -27,7 +25,6 @@ import java.util.List;
 @Slf4j
 public class JobApplicationService {
 
-    private final RestClient restClient = RestClient.create();
     private final JobApplicationRepository jobApplicationRepository;
     private final CompanyRepository companyRepository;
     private final NotificationSender notificationSender;

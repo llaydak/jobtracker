@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jobtracker-app
+spec:
+  replicas: 2 # for high availability
+  selector:
+    matchLabels:
+      app: jobtracker
+  template:
+    metadata:
+      labels:
+        app: jobtracker
+    spec:
+      containers:
+        - name: jobtracker
+          image: ilayda/jobtracker:0.0.1-SNAPSHOT
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres-service:5432/job_tracker"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis-service"
+            - name: NOTIFICATION_SERVICE_URL
+              value: "http://notification-service:8081"
+          livenessProbe: #Self-Healing
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jobtracker-service
+spec:
+  type: ClusterIP #Service Discovery and Load Balancer
+  selector:
+    app: jobtracker
+  ports:
+    - port: 80
+      targetPort: 8080

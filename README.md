@@ -85,22 +85,6 @@ REDIS_PORT=56379
 
 Every variable has a default (`${VAR:-default}`), so `docker compose up` works even without a `.env` file. See `.env.example`.
 
-### Scaling the app
-
-The `app` service deliberately has **no `container_name`**, which is what allows multiple replicas. 
-
-```bash
-# docker-compose.yml
-  app:
-    build: .
-    # No container_name: a fixed name prevents `docker compose up --scale app=N`
-    ports:
-      # Host port is overridable so replicas don't collide
-      - "${APP_PORT:-8080}:8080"
-```
-
-Replicas share the same PostgreSQL and Redis, so cache eviction on one instance is visible to all.
-
 ## Configuration
 
 | Variable | Default | Purpose |

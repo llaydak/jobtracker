@@ -90,13 +90,13 @@ Every variable has a default (`${VAR:-default}`), so `docker compose up` works e
 The `app` service deliberately has **no `container_name`**, which is what allows multiple replicas. 
 
 ```bash
-# docker-compose.scale.yml
-services:
+# docker-compose.yml
   app:
-    ports: !override []
-
-# run 3 replicas behind the compose network
-docker compose -f docker-compose.yml -f docker-compose.scale.yml up -d --scale app=3
+    build: .
+    # No container_name: a fixed name prevents `docker compose up --scale app=N`
+    ports:
+      # Host port is overridable so replicas don't collide
+      - "${APP_PORT:-8080}:8080"
 ```
 
 Replicas share the same PostgreSQL and Redis, so cache eviction on one instance is visible to all.
